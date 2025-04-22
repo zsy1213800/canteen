@@ -80,11 +80,12 @@ const dt = reactive({
 });
 
 const load = () => {
-  request.get('/foods/selectbusinessnamePage', {
+  request.get('/foods/selectPage', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
-      businessname: dt.user.name
+      name: data.name,
+      businessname: dt.user.name // 使用当前登录的businessname作为查询条件
     }
   }).then(res => {
     data.tableData = res.data?.list || [];
@@ -106,18 +107,20 @@ const handleAdd = () => {
 
 // 保存数据
 const save = () => {
-  const method = data.form.id ? 'PUT' : 'POST';
-  const url = data.form.id ? '/foods/update' : '/foods/add';
-  request({method, url, data: data.form})
-    .then(res => {
-      if (res.code === '200') {  //成功
-        ElMessage.success('操作成功');
-        data.formVisible = false; // 关闭弹窗
-        load();  // 重新加载表格数据
-      } else {
-        ElMessage.error(res.msg);
-      }
-    });
+  data.form.businessname = dt.user.name; // 将当前登录的businessname添加到表单数据中
+  request.request({
+    method: data.form.id ? 'PUT' : 'POST',
+    url: data.form.id ? '/foods/update' : '/foods/add',
+    data: data.form
+  }).then(res => {
+    if (res.code === '200') {  //成功
+      ElMessage.success('操作成功');
+      data.formVisible = false; // 关闭弹窗
+      load();  // 重新加载表格数据
+    } else {
+      ElMessage.error(res.msg);
+    }
+  });
 };
 
 const handleEdit = (row) => {
@@ -141,6 +144,6 @@ const del = (id) => {
 };
 
 const handleFileUpload = (file) => {
-  data.form.img = file.url; // 确保 file.url 包含图片的 URL
+  data.form.img = file.data; // 确保 file.data 包含图片的 URL
 };
 </script>
